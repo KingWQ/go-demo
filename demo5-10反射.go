@@ -5,44 +5,81 @@ import (
 	"reflect"
 )
 
-type Cat struct {
-	Id   int
+type myStruct struct {
 	Name string
-}
-
-func (cat Cat) Say() {
-	fmt.Printf("cat.Name: %v\n", cat.Name)
+	Sex  int
+	Age  int `json:"age"`
 }
 
 func main() {
-	//初始化结构体
-	cat := Cat{
-		Id:   1,
-		Name: "花花",
-	}
-	cat.Say()
+	//reflect1()
+	//reflect2()
+	//reflect3()
+	reflect4()
+}
 
-	//reflect.ValueOf 反射值
-	items := reflect.ValueOf(&cat).Elem()
-	//利用属性名称获取值
-	item := items.FieldByName("Name")
-	fmt.Printf("%T, %v\n", items, item)
+// 1: 通过反射获取类型对象和值对象
+func reflect1() {
+	a := 36
+	fmt.Println(reflect.TypeOf(a))
+	fmt.Println(reflect.ValueOf(a))
 
-	//利用kind获取值
-	if item.Kind() == reflect.Invalid {
-		fmt.Println("不存在的属性")
+	b := "hello word"
+	bType := reflect.TypeOf(b)
+	fmt.Println(bType.Name())
+	bValue := reflect.ValueOf(b)
+	fmt.Println(bValue.String())
+}
+
+// 2: 从类型对象中获取类型名称和种类
+func reflect2() {
+	typeOfStruct := reflect.TypeOf(myStruct{})
+	fmt.Println(typeOfStruct.Name())
+	fmt.Println(typeOfStruct.Kind())
+
+	typeOfStruct1 := reflect.TypeOf(&myStruct{})
+	//获取指针类型指向的元素类型的名称
+	fmt.Println(typeOfStruct1.Elem().Name())
+	//获取指针类型指向的元素类型的种类
+	fmt.Println(typeOfStruct1.Elem().Kind())
+}
+
+// 3：获取结构体成员类型
+func reflect3() {
+	typeOfStruct := reflect.TypeOf(myStruct{})
+	fieldNum := typeOfStruct.NumField()
+
+	for i := 0; i < fieldNum; i++ {
+		fieldName := typeOfStruct.Field(i)
+		fmt.Println(fieldName)
+
+		name, err := typeOfStruct.FieldByName("Name")
+		fmt.Println(name, err)
+	}
+}
+
+func reflect4() {
+	a := "golang"
+	obj := reflect.ValueOf(a)
+	fmt.Println(obj)
+	fmt.Println(obj.Interface())
+	fmt.Println(obj.String())
+
+	b := myStruct{
+		"梅西",
+		1,
+		31,
 	}
 
-	//遍历结构体属性
-	typeOfST := items.Type()
-	for i := 0; i < items.NumField(); i++ {
-		itemInFor := items.Field(i)
-		fmt.Printf("%v : %v\n", typeOfST.Field(i).Name, itemInFor.Interface())
+	bObject := reflect.ValueOf(b)
+	for i := 0; i < bObject.NumField(); i++ {
+		fmt.Println(bObject.Field(i).Interface())
 	}
-	//遍历结构体并调用方法
-	//注意func(p *...){} 指针模式无法获取方法
-	for n := 0; n < items.NumMethod(); n++ {
-		fmt.Printf("typeOfST.Method(n).Name: %v\n", typeOfST.Method(n).Name)
-		items.Method(n).Call(nil)
-	}
+	fmt.Println(bObject.Field(1).Type())
+
+	var c *int
+	fmt.Println(reflect.ValueOf(c).IsNil())
+	fmt.Println(reflect.ValueOf(c).IsValid())
+	fmt.Println(reflect.ValueOf(nil).IsValid())
+
 }
